@@ -1,11 +1,13 @@
 package org.apache.spark.mllib.util
 
 import org.apache.spark.mllib.linalg.Vectors
+import org.scalatest.FunSuite
+import org.apache.spark.mllib.util.MLlibTestSparkContext
+import org.apache.spark.mllib.util.TestingUtils._
 
+class DiffusionExampleSuite extends FunSuite with MLlibTestSparkContext  {
 
-class DiffusionExample  {
-
-  def runDiffusion(): Unit = {
+  test("diffusion should work") {
 
     val L = 150e3
     val H = 100e3
@@ -32,6 +34,9 @@ class DiffusionExample  {
     val inputVecForMiddleCell = Vectors.dense(Array(phaseSpace(1)(1), phaseSpace(1)(2), phaseSpace(1)(0), phaseSpace(2)(1), phaseSpace(0)(1)))
 
     val newMiddleCell = diffTrans.transform(inputVecForMiddleCell)
+
+    assert(newMiddleCell ~== Vectors.dense(1.0) absTol 1e-3)
+
   }
 
 }

@@ -6,7 +6,7 @@ import org.apache.spark.mllib.linalg
 import org.apache.spark.mllib.linalg.Vectors
 
 @Experimental
-class DiffusionTransformer (kappa: Double, dt: Double, dx: Double, dy: Double, q: Double, rho: Double, cp: Double ) extends VectorTransformer{
+class DiffusionTransformer (kappa: Double, dt: Double, dx: Double, dy: Double, q: Double, density: Double, heatCapacity: Double ) extends VectorTransformer{
   /**
    * Applies transformation on a vector.
    *
@@ -24,7 +24,7 @@ class DiffusionTransformer (kappa: Double, dt: Double, dx: Double, dy: Double, q
     val tipj = vector(3)
     val timj = vector(4)
 
-    val t_nplusone = tij + ((kappa * dt) / (dx * dx)) * (tijp - 2.0 * tij + tijm) + ((kappa * dt) / (dy * dy)) * (tipj - 2.0 * tij + timj) + (q * dt) / (rho * cp)
+    val t_nplusone = tij + ((kappa * dt) / (dx * dx)) * (tijp - 2.0 * tij + tijm) + ((kappa * dt) / (dy * dy)) * (tipj - 2.0 * tij + timj) + (q * dt) / (density * heatCapacity)
 
     Vectors.dense(t_nplusone)
   }
