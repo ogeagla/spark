@@ -1,6 +1,8 @@
 package org.apache.spark.mllib.util
 
+import org.apache.spark.SparkContext
 import org.apache.spark.mllib.linalg.{Vector, Vectors}
+import org.apache.spark.rdd.RDD
 import org.slf4j.LoggerFactory
 
 import scala.collection.immutable
@@ -25,7 +27,37 @@ class DiffusionExample  {
   val rho = 1e-4
   val cp = 100
 
-  def runDiffusionOnce(m: IndexedSeq[IndexedSeq[Double]]): IndexedSeq[IndexedSeq[Double]] = {
+
+  //seems like a better way to do this is to keep the index in the RDD, then after doing a transform:
+  //  - re-aggregate the each (idx,Vector) to make Vector be the new values used for computation
+  
+  def runDiffusionOnceParallel(sc: SparkContext, m: IndexedSeq[IndexedSeq[Double]]): RDD[Vector] = {
+
+
+    val diffTrans = new DiffusionTransformer(kappa, dt, dx, dy, q, rho, cp)
+
+    val maxY = m.size - 1
+    val maxX = m.head.size - 1
+
+    val updatedValsRdd: immutable.IndexedSeq[immutable.IndexedSeq[Vector]] = (0 to maxY) map {
+      y =>
+        (0 to maxX) map {
+          x =>
+
+            if((x == 0) || (x == maxX) || (y == 0) || (y == maxY))
+              Vectors.dense(m(x)(y))
+            else
+              Vectors.dense(Array(m(x)(y), m(x)(y+1),m(x)(y-1),m(x+1)(y),m(x-1)(y)))
+        }
+    }
+
+    val flats: RDD[Vector] = sc.makeRDD(updatedValsRdd.toArray.flatMap(v => v.toArray))
+
+    diffTrans.transform(flats)
+
+  }
+  
+  def runDiffusionOnceNaive(m: IndexedSeq[IndexedSeq[Double]]): IndexedSeq[IndexedSeq[Double]] = {
 
     val diffTrans = new DiffusionTransformer(kappa, dt, dx, dy, q, rho, cp)
 
@@ -50,16 +82,16 @@ class DiffusionExample  {
 
   }
 
-  def runDiffusionUntil(initM: IndexedSeq[IndexedSeq[Double]]): IndexedSeq[IndexedSeq[Double]] = {
+  def runDiffusionUntilConverged(initM: IndexedSeq[IndexedSeq[Double]]): IndexedSeq[IndexedSeq[Double]] = {
 
     val MAX = 100
 
     var m1 = initM
-    var m2 = runDiffusionOnce(initM)
+    var m2 = runDiffusionOnceNaive(initM)
     var iters = 1
     while((! converged(m1, m2)) || (iters > MAX)) {
       m1 = m2
-      m2 = runDiffusionOnce(m2)
+      m2 = runDiffusionOnceNaive(m2)
       iters = iters + 1
     }
     m2

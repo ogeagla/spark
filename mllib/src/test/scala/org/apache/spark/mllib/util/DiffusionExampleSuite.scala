@@ -83,7 +83,7 @@ class DiffusionExampleSuite extends FunSuite with MLlibTestSparkContext  {
 
   test("runs until conv") {
     val de = new DiffusionExample
-    val fin = de.runDiffusionUntil(M2)
+    val fin = de.runDiffusionUntilConverged(M2)
     fin.foreach(v => Vectors.dense(v.toArray) ~== Vectors.dense(1.0,1.0,1.0,1.0) absTol 1e-3)
   }
 

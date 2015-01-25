@@ -16,16 +16,20 @@ class DiffusionTransformer (kappa: Double, dt: Double, dx: Double, dy: Double, q
   override def transform(vector: linalg.Vector): linalg.Vector = {
 
 
-    require(vector.size == 5)
+    //    require(vector.size == 5)
+    if (vector.size == 1) {
+      vector
+    } else {
 
-    val tij = vector(0)
-    val tijp = vector(1)
-    val tijm = vector(2)
-    val tipj = vector(3)
-    val timj = vector(4)
+      val tij = vector(0)
+      val tijp = vector(1)
+      val tijm = vector(2)
+      val tipj = vector(3)
+      val timj = vector(4)
 
-    val t_nplusone = tij + ((kappa * dt) / (dx * dx)) * (tijp - 2.0 * tij + tijm) + ((kappa * dt) / (dy * dy)) * (tipj - 2.0 * tij + timj) + (q * dt) / (density * heatCapacity)
+      val t_nplusone = tij + ((kappa * dt) / (dx * dx)) * (tijp - 2.0 * tij + tijm) + ((kappa * dt) / (dy * dy)) * (tipj - 2.0 * tij + timj) + (q * dt) / (density * heatCapacity)
 
-    Vectors.dense(t_nplusone)
+      Vectors.dense(t_nplusone)
+    }
   }
 }
